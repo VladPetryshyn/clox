@@ -1,6 +1,7 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 #include "value.h"
+#include "table.h"
 
 #include "chunk.h"
 
@@ -15,6 +16,8 @@ typedef struct {
   Value* stackTop;
   // linked list head
   Obj* objects;
+  // used for the strings comparison
+  Table strings;
 } VM;
 
 extern VM vm;
