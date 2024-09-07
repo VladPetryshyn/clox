@@ -86,6 +86,9 @@ double a = AS_NUMBER(pop()); \
 push(valueType(a op b)); \
 } while (false)
 
+#define READ_SHORT() \
+	(vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
+
 	for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
 		// stack trace
@@ -129,6 +132,11 @@ push(valueType(a op b)); \
 				push(vm.stack[slot]); 
 				break;
 			}
+			case OP_JUMP_IF_FALSE: {
+				uint16_t offset = READ_SHORT();
+				if (isFalsey(peek(0))) vm.ip += offset;
+				break;
+			}
 			case OP_GET_GLOBAL: {
 				ObjString* name = READ_STRING();
 				Value value;
@@ -153,6 +161,16 @@ push(valueType(a op b)); \
 				ObjString* name = READ_STRING();
 				tableSet(&vm.globals, name, peek(0));
 				pop();
+				break;
+			}
+			case OP_LOOP: {
+				uint16_t offset = READ_SHORT();
+				vm.ip -= offset;
+				break;
+			}
+			case OP_JUMP: {
+				uint16_t offset = READ_SHORT();
+				vm.ip += offset;
 				break;
 			}
 			case OP_ADD: {
@@ -198,6 +216,7 @@ push(valueType(a op b)); \
 		}
 	}
 
+	#undef READ_SHORT
 	#undef BINARY_OP
 	#undef READ_BYTE
 	#undef READ_CONSTANT

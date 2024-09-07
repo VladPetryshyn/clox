@@ -26,18 +26,18 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
 }
 
 int writeConstant(Chunk* chunk, Value value, int line) {
-    int index = addConstant(chunk, value);
-    if (index <= 0xff) {
-        writeChunk(chunk, OP_CONSTANT, line);
-        writeChunk(chunk, index, line);
-    } else {
-	// I know nothing about bit shifting
-        writeChunk(chunk, OP_CONSTANT_LONG, line);
-        writeChunk(chunk, index >> 16, line);
-        writeChunk(chunk, (index >> 8) & 0xff, line);
-        writeChunk(chunk, index & 0xff, line);
-    }
-    return index;
+	int index = addConstant(chunk, value);
+	if (index <= 0xff) {
+		writeChunk(chunk, OP_CONSTANT, line);
+		writeChunk(chunk, index, line);
+	} else {
+		// I know nothing about bit shifting
+		writeChunk(chunk, OP_CONSTANT_LONG, line);
+		writeChunk(chunk, index >> 16, line);
+		writeChunk(chunk, (index >> 8) & 0xff, line);
+		writeChunk(chunk, index & 0xff, line);
+	}
+	return index;
 }
 
 void freeChunk(Chunk* chunk) {

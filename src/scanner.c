@@ -63,6 +63,7 @@ static void skipWhitespace() {
       case ' ':
       case '\r':
       case '\t':
+      case '\n':
         advance();
         break;
       case '/':
