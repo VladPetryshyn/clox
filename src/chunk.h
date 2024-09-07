@@ -22,7 +22,14 @@ typedef enum {
   OP_DIVIDE,
   OP_EQUAL,
   OP_GREATER,
+  OP_PRINT,
   OP_LESS,
+  OP_POP,
+  OP_DEFINE_GLOBAL,
+  OP_GET_GLOBAL,
+  OP_SET_GLOBAL,
+  OP_GET_LOCAL,
+  OP_SET_LOCAL,
 } OpCode;
 
 // wrapper for the dynamic array

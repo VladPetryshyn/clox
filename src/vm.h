@@ -18,6 +18,8 @@ typedef struct {
   Obj* objects;
   // used for the strings comparison
   Table strings;
+  // used to store global variables
+  Table globals;
 } VM;
 
 extern VM vm;
