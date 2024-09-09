@@ -5,6 +5,7 @@
 
 #include "chunk.h"
 #include "scanner.h"
+#include "object.h"
 
 typedef enum {
   PREC_NONE,
@@ -35,12 +36,21 @@ typedef struct {
   int depth;
 } Local;
 
-typedef struct {
+typedef enum {
+  TYPE_FUNCTION,
+  TYPE_SCRIPT
+} FunctionType;
+
+typedef struct Compiler {
+  ObjFunction* function;
+  FunctionType type;
+  struct Compiler* enclosing;
   Local locals[UINT8_COUNT];
   int localCount;
   int scopeDepth;
 } Compiler;
 
-bool compile(const char* source, Chunk* chunk);
+ObjFunction* compile(const char* source);
 static void advance();
+static void function(FunctionType type);
 #endif
