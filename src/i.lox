@@ -1,12 +1,11 @@
-fun help() {
-print "help";
-var x = 10;
-fun test() {
-print "t";
+var string = "hello guys, my name is oleg";
+
+fun popa() {
+	print string;
 }
 
-test();
-}
+popa();
 
-var t = help();
-// t();
+string = "new string";
+
+popa();

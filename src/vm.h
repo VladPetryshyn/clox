@@ -33,6 +33,15 @@ typedef struct {
   // used to store global variables
   Table globals;
   ObjUpvalue* openUpvalues;
+
+  // GC grayStack
+  int grayCount;
+  int grayCapacity;
+  Obj** grayStack;
+
+  // self adjusting heap
+  size_t bytesAllocated;
+  size_t nextGC;
 } VM;
 
 extern VM vm;

@@ -62,4 +62,5 @@ typedef struct Compiler {
 ObjFunction* compile(const char* source);
 static void advance();
 static void function(FunctionType type);
+void markCompilerRoots();
 #endif

@@ -29,5 +29,7 @@ void tableAddAll(Table* from, Table* to);
 // retrieve value from the table.
 bool tableGet(Table* table, ObjString* key, Value* value);
 bool tableDelete(Table* table, ObjString* key);
+void markTable(Table* table);
+void tableRemoveWhite(Table* table);
 
 #endif

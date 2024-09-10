@@ -2,6 +2,7 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "object.h"
 
 // this is a macro, that calculates new capacity based on a given current capacity.
 // we grow capacity by a factor of 2
@@ -24,5 +25,8 @@
 // changing size of an existing allocation
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 void freeObjects();
+void collectGarbage();
+void markObject(Obj* object);
+void markValue(Value value);
 
 #endif
