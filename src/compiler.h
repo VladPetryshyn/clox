@@ -34,7 +34,15 @@ typedef struct {
   Token name;
   // we store depth, to know which locals to discard, when a block ends
   int depth;
+
+  // true if it was captured by a closure
+  bool isCaptured;
 } Local;
+
+typedef struct {
+  uint8_t index;
+  bool isLocal;
+} Upvalue;
 
 typedef enum {
   TYPE_FUNCTION,
@@ -48,6 +56,7 @@ typedef struct Compiler {
   Local locals[UINT8_COUNT];
   int localCount;
   int scopeDepth;
+  Upvalue upvalues[UINT8_COUNT];
 } Compiler;
 
 ObjFunction* compile(const char* source);

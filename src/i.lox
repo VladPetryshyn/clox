@@ -1,8 +1,12 @@
-fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 2) + fib(n - 1);
+fun help() {
+print "help";
+var x = 10;
+fun test() {
+print "t";
 }
 
-var start = clock();
-print fib(35);
-print clock() - start;
+test();
+}
+
+var t = help();
+// t();
