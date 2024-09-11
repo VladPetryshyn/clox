@@ -19,7 +19,7 @@
 */
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
-    vm.bytesAllocated += newSize - oldSize;
+  vm.bytesAllocated += newSize - oldSize;
   if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
     collectGarbage();
@@ -30,20 +30,20 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
   }
 
 
-	if (newSize == 0) {
-		free(pointer);
-		return NULL;
-	}
+  if (newSize == 0) {
+    free(pointer);
+    return NULL;
+  }
 
-	void* result = realloc(pointer, newSize);
-	if (result == NULL) exit(1);
-	return result;
+  void* result = realloc(pointer, newSize);
+  if (result == NULL) exit(1);
+  return result;
 }
 
 void markObject(Obj* object) {
   if (object == NULL) return;
-	// avoid ending in the infinite loop
-	if (object->isMarked) return;
+  // avoid ending in the infinite loop
+  if (object->isMarked) return;
 #ifdef DEBUG_LOG_GC
   printf("%p mark ", (void*)object);
   printValue(OBJ_VAL(object));
@@ -51,14 +51,14 @@ void markObject(Obj* object) {
 #endif
   object->isMarked = true;
 
-	if (vm.grayCapacity < vm.grayCount + 1) {
-		vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
-		vm.grayStack = (Obj**)realloc(vm.grayStack,
-																sizeof(Obj*) * vm.grayCapacity);
-		if (vm.grayStack == NULL) exit(1);
-	}
+  if (vm.grayCapacity < vm.grayCount + 1) {
+    vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
+    vm.grayStack = (Obj**)realloc(vm.grayStack,
+				  sizeof(Obj*) * vm.grayCapacity);
+    if (vm.grayStack == NULL) exit(1);
+  }
 
-	vm.grayStack[vm.grayCount++] = object;
+  vm.grayStack[vm.grayCount++] = object;
 }
 
 void markValue(Value value) {
@@ -82,23 +82,34 @@ static void blackenObject(Obj* object) {
 #endif
 
   switch (object->type) {
-		case OBJ_UPVALUE:
-			markValue(((ObjUpvalue*)object)->closed);
-			break;
-		case OBJ_CLOSURE: {
-			ObjClosure* closure = (ObjClosure*)object;
-			markObject((Obj*)closure->function);
-			for (int i = 0; i < closure->upvalueCount; i++) {
-				markObject((Obj*)closure->upvalues[i]);
-			}
-			break;
-		}
-		case OBJ_FUNCTION: {
-			ObjFunction* function = (ObjFunction*)object;
-			markObject((Obj*)function->name);
-			markArray(&function->chunk.constants);
-			break;
-		}
+    case OBJ_INSTANCE: {
+      ObjInstance* instance = (ObjInstance*)object;
+      markObject((Obj*)instance->klass);
+      markTable(&instance->fields);
+      break;
+    }
+    case OBJ_UPVALUE:
+      markValue(((ObjUpvalue*)object)->closed);
+      break;
+    case OBJ_CLASS: {
+      ObjClass* klass = (ObjClass*)object;
+      markObject((Obj*)klass->name);
+      break;
+    }
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)object;
+      markObject((Obj*)closure->function);
+      for (int i = 0; i < closure->upvalueCount; i++) {
+	markObject((Obj*)closure->upvalues[i]);
+      }
+      break;
+    }
+    case OBJ_FUNCTION: {
+      ObjFunction* function = (ObjFunction*)object;
+      markObject((Obj*)function->name);
+      markArray(&function->chunk.constants);
+      break;
+    }
     case OBJ_NATIVE:
     case OBJ_STRING:
       break;
@@ -118,6 +129,10 @@ static void freeObject(Obj* object) {
       case OBJ_NATIVE:
 	FREE(ObjNative, object);
 	break;
+      case OBJ_CLASS: {
+	FREE(ObjClass, object);
+	break;
+      }
       case OBJ_UPVALUE:
 	FREE(ObjUpvalue, object);
 	break;
@@ -135,6 +150,12 @@ static void freeObject(Obj* object) {
 	FREE(ObjClosure, object);
 	break;
       }
+      case OBJ_INSTANCE: {
+	ObjInstance* instance = (ObjInstance*)object;
+	freeTable(&instance->fields);
+	FREE(ObjInstance, object);
+	break;
+      }
     }
   }
 }
@@ -147,7 +168,7 @@ void freeObjects() {
     object = next;
   }
 
-	free(vm.grayStack);
+  free(vm.grayStack);
 }
 
 // most roots are temp variables, or sitting right in the Vm's stack, so we walk the stack.
@@ -156,22 +177,22 @@ static void markRoots() {
     markValue(*slot);
   }
 
-	// mark value stack closure upvalues and constants
-	for (int i = 0; i < vm.frameCount; i++) {
+  // mark value stack closure upvalues and constants
+  for (int i = 0; i < vm.frameCount; i++) {
     markObject((Obj*)vm.frames[i].closure);
   }
 
-	// traverse the open upvalue list
-	for (ObjUpvalue* upvalue = vm.openUpvalues;
-	upvalue != NULL;
-	upvalue = upvalue->next) {
-		markObject((Obj*)upvalue);
-	}
+  // traverse the open upvalue list
+  for (ObjUpvalue* upvalue = vm.openUpvalues;
+  upvalue != NULL;
+  upvalue = upvalue->next) {
+    markObject((Obj*)upvalue);
+  }
 
-	// mark global variables
-	markTable(&vm.globals);
-	// handle bytecode compilation process
-	markCompilerRoots();
+  // mark global variables
+  markTable(&vm.globals);
+  // handle bytecode compilation process
+  markCompilerRoots();
 }
 
 static void traceReferences() {
@@ -186,17 +207,17 @@ static void sweep() {
   Obj* object = vm.objects;
   while (object != NULL) {
     if (object->isMarked) {
-			// make it white again to repeat the cycle
-			object->isMarked = false;
+      // make it white again to repeat the cycle
+      object->isMarked = false;
       previous = object;
       object = object->next;
     } else {
       Obj* unreached = object;
       object = object->next;
       if (previous != NULL) {
-        previous->next = object;
+	previous->next = object;
       } else {
-        vm.objects = object;
+	vm.objects = object;
       }
 
       freeObject(unreached);
@@ -206,18 +227,18 @@ static void sweep() {
 
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
-	printf("-- gc begin\n");
+  printf("-- gc begin\n");
 #endif
 
   size_t before = vm.bytesAllocated;
   markRoots();
-	traceReferences();
-	// remove references to unreachable objects
-	tableRemoveWhite(&vm.strings);
-	// reclaim white objects
-	sweep();
+  traceReferences();
+  // remove references to unreachable objects
+  tableRemoveWhite(&vm.strings);
+  // reclaim white objects
+  sweep();
   // adjust the threshold
-	vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
+  vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
 
 #ifdef DEBUG_LOG_GC
   printf("-- gc end\n");

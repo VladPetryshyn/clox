@@ -1,11 +1,6 @@
-var string = "hello guys, my name is oleg";
+class Test {}
 
-fun popa() {
-	print string;
-}
-
-popa();
-
-string = "new string";
-
-popa();
+var test = Test();
+test.d = 10;
+test.s = 30;
+print test.s + test.d; // 3

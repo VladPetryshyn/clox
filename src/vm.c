@@ -16,7 +16,7 @@
 VM vm; 
 
 static Value clockNative(int argCount, Value* args) {
-  return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+	return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
 static void resetStack() {
@@ -39,7 +39,7 @@ static void runtimeError(const char* format, ...) {
 		ObjFunction* function = frame->closure->function;
 		size_t instruction = frame->ip - function->chunk.code - 1;
 		fprintf(stderr, "[line %d] in ", 
-		  function->chunk.lines[instruction]);
+	  function->chunk.lines[instruction]);
 		if (function->name == NULL) {
 			fprintf(stderr, "script\n");
 		} else {
@@ -50,11 +50,11 @@ static void runtimeError(const char* format, ...) {
 }
 
 static void defineNative(const char* name, NativeFn function) {
-  push(OBJ_VAL(copyString(name, (int)strlen(name))));
-  push(OBJ_VAL(newNative(function)));
-  tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
-  pop();
-  pop();
+	push(OBJ_VAL(copyString(name, (int)strlen(name))));
+	push(OBJ_VAL(newNative(function)));
+	tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+	pop();
+	pop();
 }
 
 
@@ -90,7 +90,7 @@ static bool call(ObjClosure* closure, int argCount) {
 	// check if the user passes the right amount of arguments
 	if (argCount != closure->function->arity) {
 		runtimeError("Expected %d arguments but got %d.",
-			   closure->function->arity, argCount);
+	       closure->function->arity, argCount);
 		return false;
 	}
 
@@ -99,10 +99,10 @@ static bool call(ObjClosure* closure, int argCount) {
 		runtimeError("Stack overflow.");
 		return false;
 	}
-				CallFrame* frame = &vm.frames[vm.frameCount++];
-				frame->closure = closure;
-				frame->ip = closure->function->chunk.code;
-				frame->slots = vm.stackTop - argCount - 1;
+	CallFrame* frame = &vm.frames[vm.frameCount++];
+	frame->closure = closure;
+	frame->ip = closure->function->chunk.code;
+	frame->slots = vm.stackTop - argCount - 1;
 
 	return true;
 }
@@ -112,12 +112,17 @@ static bool callValue(Value callee, int argCount) {
 		switch (OBJ_TYPE(callee)) {
 			case OBJ_CLOSURE:
 				return call(AS_CLOSURE(callee), argCount);
-				// just hand off to c and stuff the result in the stack
+			// just hand off to c and stuff the result in the stack
 			case OBJ_NATIVE: {
 				NativeFn native = AS_NATIVE(callee);
 				Value result = native(argCount, vm.stackTop - argCount);
 				vm.stackTop -= argCount + 1;
 				push(result);
+				return true;
+			}
+			case OBJ_CLASS: {
+				ObjClass* klass = AS_CLASS(callee);
+				vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
 				return true;
 			}
 			default:
@@ -129,7 +134,7 @@ static bool callValue(Value callee, int argCount) {
 }
 
 static ObjUpvalue* captureUpvalue(Value* local) {
-				printf("capturing upvalues, \n\n\n");
+	printf("capturing upvalues, \n\n\n");
 	ObjUpvalue* prevUpvalue = NULL;
 	ObjUpvalue* upvalue = vm.openUpvalues;
 	while (upvalue != NULL && upvalue->location > local) {
@@ -141,25 +146,25 @@ static ObjUpvalue* captureUpvalue(Value* local) {
 		return upvalue;
 	}
 
-  ObjUpvalue* createdUpvalue = newUpvalue(local);
-				createdUpvalue->next = upvalue;
+	ObjUpvalue* createdUpvalue = newUpvalue(local);
+	createdUpvalue->next = upvalue;
 
-				if (prevUpvalue == NULL) {
-								vm.openUpvalues = createdUpvalue;
-				} else {
-								prevUpvalue->next = createdUpvalue;
-				}
-  return createdUpvalue;
+	if (prevUpvalue == NULL) {
+		vm.openUpvalues = createdUpvalue;
+	} else {
+		prevUpvalue->next = createdUpvalue;
+	}
+	return createdUpvalue;
 }
 
 static void closeUpvalues(Value* last) {
-  while (vm.openUpvalues != NULL &&
-         vm.openUpvalues->location >= last) {
-    ObjUpvalue* upvalue = vm.openUpvalues;
-    upvalue->closed = *upvalue->location;
-    upvalue->location = &upvalue->closed;
-    vm.openUpvalues = upvalue->next;
-  }
+	while (vm.openUpvalues != NULL &&
+		vm.openUpvalues->location >= last) {
+		ObjUpvalue* upvalue = vm.openUpvalues;
+		upvalue->closed = *upvalue->location;
+		upvalue->location = &upvalue->closed;
+		vm.openUpvalues = upvalue->next;
+	}
 }
 
 static bool isFalsey(Value value) {
@@ -192,7 +197,7 @@ static InterpretResult run() {
 		(uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 
 #define READ_CONSTANT() \
-				(frame->closure->function->chunk.constants.values[READ_BYTE()])
+	(frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 	// we take b first, because it's the right operand in the stack
 	// we take a than, because it's left operand in the stack.
@@ -221,7 +226,7 @@ static InterpretResult run() {
 
 		// disassembling Instructions
 		disassembleInstruction(&frame->closure->function->chunk,
-						 (int)(frame->ip - frame->closure->function->chunk.code));
+			 (int)(frame->ip - frame->closure->function->chunk.code));
 #endif
 
 		uint8_t instruction;
@@ -372,15 +377,53 @@ static InterpretResult run() {
 				push(*frame->closure->upvalues[slot]->location);
 				break;
 			}
-												case OP_CLOSE_UPVALUE:
-																closeUpvalues(vm.stackTop - 1);
-																pop();
-																break;
+			case OP_CLOSE_UPVALUE:
+				closeUpvalues(vm.stackTop - 1);
+				pop();
+				break;
 			case OP_SET_UPVALUE: {
 				uint8_t slot = READ_BYTE();
 				*frame->closure->upvalues[slot]->location = peek(0);
 				break;
 			}
+			case OP_CLASS:
+				push(OBJ_VAL(newClass(READ_STRING())));
+				break;
+			case OP_SET_PROPERTY: {
+				//> set-not-instance
+				if (!IS_INSTANCE(peek(1))) {
+					runtimeError("Only instances have fields.");
+					return INTERPRET_RUNTIME_ERROR;
+				}
+
+				//< set-not-instance
+				ObjInstance* instance = AS_INSTANCE(peek(1));
+				tableSet(&instance->fields, READ_STRING(), peek(0));
+				Value value = pop();
+				pop();
+				push(value);
+				break;
+			}
+
+			case OP_GET_PROPERTY: {
+				if (!IS_INSTANCE(peek(0))) {
+					runtimeError("Only instances have properties.");
+					return INTERPRET_RUNTIME_ERROR;
+				}
+
+				ObjInstance* instance = AS_INSTANCE(peek(0));
+				ObjString* name = READ_STRING();
+
+				Value value;
+				if (tableGet(&instance->fields, name, &value)) {
+					pop(); // Instance.
+					push(value);
+					break;
+				}
+				runtimeError("Undefined property '%s'.", name->chars);
+				return INTERPRET_RUNTIME_ERROR;
+			}
+
 		}
 	}
 
