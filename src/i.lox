@@ -1,6 +1,12 @@
-class Test {}
+class Oops {
+  init() {
+    fun f() {
+      print "not a method";
+    }
 
-var test = Test();
-test.d = 10;
-test.s = 30;
-print test.s + test.d; // 3
+    this.field = f;
+  }
+}
+
+var oops = Oops();
+oops.field();

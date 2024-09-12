@@ -46,8 +46,14 @@ typedef struct {
 
 typedef enum {
   TYPE_FUNCTION,
-  TYPE_SCRIPT
+  TYPE_SCRIPT,
+  TYPE_METHOD,
+  TYPE_INITIALIZER,
 } FunctionType;
+
+typedef struct ClassCompiler {
+  struct ClassCompiler* enclosing;
+} ClassCompiler;
 
 typedef struct Compiler {
   ObjFunction* function;
@@ -62,5 +68,6 @@ typedef struct Compiler {
 ObjFunction* compile(const char* source);
 static void advance();
 static void function(FunctionType type);
+static void namedVariable(Token name, bool canAssign);
 void markCompilerRoots();
 #endif
