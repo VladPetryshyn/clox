@@ -1,6 +1,5 @@
 #ifndef clox_vm_h
 #define clox_vm_h
-#include "compiler.h"
 #include "value.h"
 #include "table.h"
 

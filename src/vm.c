@@ -550,6 +550,9 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
+	// idk why but this line fixes issue with code execution being very slow
+	printf("\n");
+
 	ObjFunction* function = compile(source);
 	if (function == NULL) return INTERPRET_COMPILE_ERROR;
 

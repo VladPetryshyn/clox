@@ -63,7 +63,6 @@ static void skipWhitespace() {
       case ' ':
       case '\r':
       case '\t':
-      case '\n':
         advance();
         break;
       case '/':
@@ -73,6 +72,10 @@ static void skipWhitespace() {
         } else {
           return;
         }
+        break;
+      case '\n':
+        scanner.line++;
+        advance();
         break;
       default:
         return;
