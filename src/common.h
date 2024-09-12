@@ -5,6 +5,7 @@
 // bad for performance but allows us to find GC bugs easier
 // #define DEBUG_STRESS_GC
 // #define DEBUG_LOG_GC
+#define NAN_BOXING
 
 #include <stdbool.h>
 #include <stddef.h>
