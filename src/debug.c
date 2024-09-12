@@ -78,6 +78,8 @@ int disassembleInstruction(Chunk *chunk, int offset) {
 	}
 	uint8_t instruction = chunk->code[offset];
 	switch(instruction) {
+		case OP_INHERIT:
+			return simpleInstruction("OP_INHERIT", offset);
 		case OP_CONSTANT_LONG:
 			return constantLongInstruction("OP_CONSTANT_LONG", chunk, offset);
 		case OP_CONSTANT:
@@ -163,6 +165,10 @@ int disassembleInstruction(Chunk *chunk, int offset) {
 			return constantInstruction("OP_GET_PROPERTY", chunk, offset);
 		case OP_SET_PROPERTY:
 			return constantInstruction("OP_SET_PROPERTY", chunk, offset);
+		case OP_GET_SUPER:
+			return constantInstruction("OP_GET_SUPER", chunk, offset);
+		case OP_SUPER_INVOKE:
+			return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
 		default:
 			printf("Unknown code %d\n", instruction);
 			return offset +1;

@@ -164,7 +164,7 @@ static bool invokeFromClass(ObjClass* klass, ObjString* name,
 
 static bool invoke(ObjString* name, int argCount) {
   Value receiver = peek(argCount);
-	
+
   if (!IS_INSTANCE(receiver)) {
     runtimeError("Only instances have methods.");
     return false;
@@ -172,11 +172,12 @@ static bool invoke(ObjString* name, int argCount) {
 
   ObjInstance* instance = AS_INSTANCE(receiver);
 
-	Value value;
-	if (tableGet(&instance->fields, name, &value)) {
-		vm.stackTop[-argCount - 1] = value;
-		return callValue(value, argCount);
-	}
+  Value value;
+  if (tableGet(&instance->fields, name, &value)) {
+    vm.stackTop[-argCount - 1] = value;
+    return callValue(value, argCount);
+  }
+
   return invokeFromClass(instance->klass, name, argCount);
 }
 
@@ -195,7 +196,6 @@ static bool bindMethod(ObjClass* klass, ObjString* name) {
 }
 
 static ObjUpvalue* captureUpvalue(Value* local) {
-	printf("capturing upvalues, \n\n\n");
 	ObjUpvalue* prevUpvalue = NULL;
 	ObjUpvalue* upvalue = vm.openUpvalues;
 	while (upvalue != NULL && upvalue->location > local) {
@@ -501,6 +501,38 @@ static InterpretResult run() {
 				ObjString* method = READ_STRING();
 				int argCount = READ_BYTE();
 				if (!invoke(method, argCount)) {
+					return INTERPRET_RUNTIME_ERROR;
+				}
+				frame = &vm.frames[vm.frameCount - 1];
+				break;
+			}
+			case OP_INHERIT: {
+				Value superclass = peek(1);
+				if (!IS_CLASS(superclass)) {
+					runtimeError("Superclass must be a class.");
+					return INTERPRET_RUNTIME_ERROR;
+				}
+
+				ObjClass* subclass = AS_CLASS(peek(0));
+				tableAddAll(&AS_CLASS(superclass)->methods,
+		&subclass->methods);
+				pop(); // Subclass.
+				break;
+			}
+			case OP_GET_SUPER: {
+				ObjString* name = READ_STRING();
+				ObjClass* superclass = AS_CLASS(pop());
+
+				if (!bindMethod(superclass, name)) {
+					return INTERPRET_RUNTIME_ERROR;
+				}
+				break;
+			}
+			case OP_SUPER_INVOKE: {
+				ObjString* method = READ_STRING();
+				int argCount = READ_BYTE();
+				ObjClass* superclass = AS_CLASS(pop());
+				if (!invokeFromClass(superclass, method, argCount)) {
 					return INTERPRET_RUNTIME_ERROR;
 				}
 				frame = &vm.frames[vm.frameCount - 1];

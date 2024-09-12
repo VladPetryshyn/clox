@@ -1,4 +1,10 @@
-class Oops {
+class Test {
+  call() {
+    print "yes, i'm super";
+  }
+}
+
+class Oops < Test {
   init() {
     fun f() {
       print "not a method";
@@ -6,7 +12,11 @@ class Oops {
 
     this.field = f;
   }
+
+  test() {
+    super.call();
+  }
 }
 
 var oops = Oops();
-oops.field();
+oops.test();
